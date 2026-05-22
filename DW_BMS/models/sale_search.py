@@ -1,4 +1,4 @@
-from odoo import models, fields, _
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 class SaleOrder(models.Model):
@@ -6,10 +6,20 @@ class SaleOrder(models.Model):
 
     customer_phone = fields.Char(
         string="Customer Phone",
-        related='partner_id.phone',
+        compute="_compute_customer_phone",
         store=True,
-        readonly=True
     )
+
+    @api.depends('partner_id.phone', 'partner_id.mobile')
+    def _compute_customer_phone(self):
+
+        for rec in self:
+
+            rec.customer_phone = (
+                rec.partner_id.mobile
+                or rec.partner_id.phone
+                or ''
+            )
 
     def action_confirm(self):
 

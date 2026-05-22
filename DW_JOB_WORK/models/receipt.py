@@ -1,6 +1,7 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+
 class JobWorkReceipt(models.Model):
     _name = "dw.job.work.receipt"
     _description = "Job Work Receipt"
