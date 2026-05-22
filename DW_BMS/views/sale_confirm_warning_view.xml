@@ -1,0 +1,100 @@
+<odoo>
+
+    <!-- NORMAL WARNING -->
+
+    <record id="view_sale_confirm_warning_form_normal" model="ir.ui.view">
+
+        <field name="name">sale.confirm.warning.form.normal</field>
+
+        <field name="model">sale.confirm.warning</field>
+
+        <field name="arch" type="xml">
+
+            <form string="Warning">
+
+                <sheet>
+
+                    <div style="
+                        font-size:18px;
+                        padding:20px;
+                        text-align:center;
+                        font-weight:bold;
+                    ">
+
+                        <br/>
+                        Quotation Amount is near E-way Bill Limit.
+                        Please verify before confirming.
+
+                    </div>
+
+                </sheet>
+
+                <footer>
+
+                    <button name="action_yes"
+                            string="Yes"
+                            type="object"
+                            class="btn btn-primary"/>
+
+                    <button string="Cancel"
+                            special="cancel"
+                            class="btn btn-secondary"/>
+
+                </footer>
+
+            </form>
+
+        </field>
+
+    </record>
+
+
+    <!-- IGST WARNING -->
+
+    <record id="view_sale_confirm_warning_form_igst" model="ir.ui.view">
+
+        <field name="name">sale.confirm.warning.form.igst</field>
+
+        <field name="model">sale.confirm.warning</field>
+
+        <field name="arch" type="xml">
+
+            <form string="IGST Warning">
+
+                <sheet>
+
+                    <div style="
+                        font-size:18px;
+                        padding:20px;
+                        text-align:center;
+                        font-weight:bold;
+                    ">
+
+                        <br/>
+                        Quotation Amount is near E-way Bill Limit.
+                        Please verify before confirming.
+
+                    </div>
+
+                </sheet>
+
+                <footer>
+
+                    <button name="action_yes"
+                            string="Yes"
+                            type="object"
+                            class="btn btn-primary"/>
+
+                    <button string="Cancel"
+                            special="cancel"
+                            class="btn btn-secondary"/>
+
+                </footer>
+
+            </form>
+
+        </field>
+
+    </record>
+
+</odoo>

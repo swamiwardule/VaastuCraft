@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        stock_picking_display_status_view.xml
+        ─────────────────────────────────────
+        1. Adds "Status" badge column to the Delivery list view.
+        2. Adds Shipping Status quick-filter buttons to the Delivery search panel.
+
+        Key design constraints (Odoo 17):
+          • state MUST remain in the view (column_invisible) — internal modifiers
+            use it (e.g. readonly="state == 'done'"). Removing it crashes loading.
+          • decoration-secondary is NOT in the Odoo 17 RNG schema. Valid values:
+            danger | info | muted | primary | success | warning | bf | it
+          • display_status_key is inserted alongside display_status (no //tree
+            position="inside" which conflicts with <header> ordering).
+          • Shipping status filters use the stored `latest_shipping_status` field
+            (populated by shipping.management create/write hooks) so they work
+            efficiently without re-computing on every load.
+    -->
+
+    <!-- ── 1. Delivery list: Status badge column ─────────────────────────── -->
+    <record id="view_picking_tree_display_status" model="ir.ui.view">
+        <field name="name">stock.picking.tree.display.status</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+
+            <!-- Step 1: hide state but keep it in DOM (required by modifiers) -->
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="column_invisible">True</attribute>
+            </xpath>
+
+            <!-- Step 2: inject display_status + key right after state -->
+            <xpath expr="//field[@name='state']" position="after">
+                <!-- key field: invisible, used only for badge decoration conditions -->
+                <field name="display_status_key" column_invisible="True"/>
+
+                <!-- combined Status badge column -->
+                <field name="display_status"
+                       string="Status"
+                       widget="badge"
+                       decoration-muted="display_status_key in ('draft', 'cancel', 'packed')"
+                       decoration-warning="display_status_key in ('waiting', 'confirmed', 'in_transit', 'rto', 'rto_received', 'complaint')"
+                       decoration-info="display_status_key in ('assigned', 'shipped', 'out_for_delivery')"
+                       decoration-success="display_status_key == 'delivered'"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ── 2. Delivery search: Shipping Status quick-filter buttons ───────── -->
+    <record id="view_picking_search_shipping_status" model="ir.ui.view">
+        <field name="name">stock.picking.search.shipping.status</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="arch" type="xml">
+            <!--
+                Append shipping-status filter buttons inside the existing
+                <search> element, after all built-in filters.
+                A <separator/> groups them visually under "Shipping Status".
+            -->
+            <xpath expr="//search" position="inside">
+
+                <separator/>
+
+                <!-- Label group heading (non-functional, visual only) -->
+                <filter string="── Shipping Status ──" name="sep_shipping_status"
+                        domain="[('id', '=', False)]" invisible="1"/>
+
+
+                <filter string="Shipped"
+                        name="filter_shipped"
+                        domain="[('display_status_key', '=', 'shipped')]"/>
+
+                <filter string="Packed (Done)"
+                        name="filter_packed_done"
+                        domain="[('display_status_key', '=', 'packed')]"/>
+
+                <filter string="In Transit"
+                        name="filter_in_transit"
+                        domain="[('display_status_key', '=', 'in_transit')]"/>
+
+                <filter string="Out for Delivery"
+                        name="filter_out_for_delivery"
+                        domain="[('display_status_key', '=', 'out_for_delivery')]"/>
+
+                <filter string="Delivered"
+                        name="filter_delivered"
+                        domain="[('display_status_key', '=', 'delivered')]"/>
+
+                <filter string="RTO"
+                        name="filter_rto"
+                        domain="[('display_status_key', '=', 'rto')]"/>
+
+                <filter string="RTO Received"
+                        name="filter_rto_received"
+                        domain="[('display_status_key', '=', 'rto_received')]"/>
+
+                <filter string="Complaint"
+                        name="filter_complaint"
+                        domain="[('display_status_key', '=', 'complaint')]"/>
+
+                <filter string="Cancelled"
+                        name="filter_cancelled"
+                        domain="[('display_status_key', '=', 'cancel')]"/>
+
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

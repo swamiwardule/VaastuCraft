@@ -1,0 +1,111 @@
+<odoo>
+    <record id="view_job_work_receipt_tree" model="ir.ui.view">
+        <field name="name">dw.job.work.receipt.tree</field>
+        <field name="model">dw.job.work.receipt</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="receipt_date"/>
+                <field name="issue_id"/>
+                <field name="contractor_id"/>
+                <field name="state"/>
+                <field name="status_display"
+                       string="Status"
+                       readonly="1"
+                       decoration-warning="state == 'draft'"
+                       widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_job_work_receipt_form" model="ir.ui.view">
+        <field name="name">dw.job.work.receipt.form</field>
+        <field name="model">dw.job.work.receipt</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="receipt_date" readonly="state != 'draft'"/>
+                            <field name="issue_id" readonly="1"/>
+                            <field name="contractor_id" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Raw Materials">
+                            <field name="raw_line_ids" readonly="state != 'draft'">
+                                <tree editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="product_uom_id" readonly="1"/>
+                                    <field name="available_qty" readonly="1"/>
+                                    <field name="qty_used"/>                                   
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Finished Products">
+                            <field name="line_ids" readonly="state != 'draft'">
+                                <tree editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="product_uom_id" readonly="1"/>
+                                    <field name="qty"/>
+                                    <field name="price_unit"/>
+                                    <field name="tax_ids" widget="many2many_tags"/>
+                                    <field name="price_subtotal" readonly="1"/>
+                                    <!-- <field name="price_total" readonly="1"/> -->
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                    <div class="oe_subtotal_footer oe_right">
+
+                        <group class="oe_subtotal_footer">
+
+                            <field name="amount_untaxed"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"/>
+
+                            <field name="cgst_amount"
+                                string="CGST"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                                invisible="cgst_amount == 0"/>
+
+                            <field name="sgst_amount"
+                                string="SGST"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                                invisible="sgst_amount == 0"/>
+
+                            <field name="igst_amount"
+                                string="IGST"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                                invisible="igst_amount == 0"/>
+
+                            <field name="amount_total"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                                class="oe_subtotal_footer_separator"/>
+
+                        </group>
+
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="job_work_receipt_action" model="ir.actions.act_window">
+        <field name="name">Job Work Receipt</field>
+        <field name="res_model">dw.job.work.receipt</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

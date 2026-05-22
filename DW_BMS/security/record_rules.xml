@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ========================= -->
+    <!-- SALES USER: OWN SALES ONLY -->
+    <!-- ========================= -->
+    <record id="rule_bms_sales_own_sales" model="ir.rule">
+        <field name="name">BMS Sales: Own Sales Only</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_bms_sales'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ========================= -->
+    <!-- PURCHASE USER: OWN PURCHASE ONLY -->
+    <!-- ========================= -->
+    <record id="rule_bms_purchase_own_purchase" model="ir.rule">
+        <field name="name">BMS Purchase: Own Purchase Only</field>
+        <field name="model_id" ref="purchase.model_purchase_order"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_bms_purchase'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ========================= -->
+    <!-- ACCOUNTS USER: SEE ALL -->
+    <!-- ========================= -->
+    <record id="rule_bms_accounts_all" model="ir.rule">
+        <field name="name">BMS Accounts: All Records</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_bms_accounts'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_sales_team_customer_invoices_all" model="ir.rule">
+        <field name="name">Sales Team: Customer Invoices Only</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="domain_force">[('move_type', 'in', ('out_invoice', 'out_refund', 'out_receipt'))]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_sales_team'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ========================= -->
+    <!-- REPORT USER: READ ALL -->
+    <!-- ========================= -->
+    <record id="rule_bms_report_read_all" model="ir.rule">
+        <field name="name">BMS Report: Read All</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_bms_report'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_packing_team_sale_read_all" model="ir.rule">
+        <field name="name">Packing Team: Sales Documents Read All</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_packing_team'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Allow packing team to read ALL sale order lines (required for Print
+         Quotation report — the QWeb template iterates doc.order_line and
+         Odoo's built-in sale rules silently filter it to empty without this) -->
+    <record id="rule_packing_team_sale_line_read_all" model="ir.rule">
+        <field name="name">Packing Team: Sale Order Lines Read All</field>
+        <field name="model_id" ref="sale.model_sale_order_line"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_packing_team'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_packing_team_invoice_only" model="ir.rule">
+        <field name="name">Packing Team: Customer Invoices Only</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="domain_force">[('move_type', '=', 'out_invoice')]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_packing_team'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_packing_team_delivery_only" model="ir.rule">
+        <field name="name">Packing Team: Active Deliveries Only</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <!--
+            SHOW delivery to packing team if:
+              (a) outgoing AND latest_shipping_status is False/NULL (no shipping created yet), OR
+              (b) outgoing AND latest_shipping_status is not 'delivered' or 'cancel'
+
+            HIDE when shipping status = 'delivered' or 'cancel'.
+
+            WHY the OR clause:
+              In PostgreSQL, NULL NOT IN ('delivered', 'cancel') evaluates to NULL
+              (not TRUE), which would block write access for unshipped deliveries.
+              The explicit False check handles this SQL NULL edge case.
+        -->
+        <field name="domain_force">['&amp;', ('picking_type_code', '=', 'outgoing'), '|', ('latest_shipping_status', '=', False), ('latest_shipping_status', 'not in', ['delivered', 'cancel'])]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_packing_team'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <!-- ========================= -->
+    <!-- MANUFACTURING USER: OWN PRODUCTION ONLY -->
+    <!-- ========================= -->
+    <record id="rule_bms_manufacturing_own_production" model="ir.rule">
+        <field name="name">BMS Manufacturing: Own Production Only</field>
+        <field name="model_id" ref="mrp.model_mrp_production"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('DW_BMS.group_bms_manufacturing'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+</odoo>

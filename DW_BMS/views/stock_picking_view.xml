@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_inherit_dw_bms" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.dw.bms</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/field[@name='state'][@invisible=&quot;picking_type_code != 'incoming'&quot;]" position="attributes">
+                <attribute name="statusbar_visible">draft,waiting,assigned,done</attribute>
+            </xpath>
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="sale_id" invisible="1"/>
+                <field name="is_packing_restricted_user" invisible="1"/>
+                <field name="shipping_count" invisible="1"/>
+                <button name="action_open_packing_order"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-cubes"
+                        invisible="not sale_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Packing</span>
+                    </div>
+                </button>
+                <button name="action_open_shipping"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-truck"
+                        invisible="not sale_id">
+                    <field name="shipping_count" widget="statinfo" string="Shipping"/>
+                </button>
+            </xpath>
+
+            <xpath expr="//header/field[@name='state'][@invisible=&quot;picking_type_code == 'incoming'&quot;]" position="attributes">
+                <attribute name="statusbar_visible">draft,waiting,assigned,done</attribute>
+            </xpath>
+
+            <xpath expr="//header/button[@name='button_validate'][1]" position="attributes">
+                <attribute name="invisible">state in ('draft', 'confirmed', 'done', 'cancel')</attribute>
+            </xpath>
+
+            <xpath expr="//header/button[@name='button_validate'][2]" position="attributes">
+                <attribute name="invisible">state in ('waiting', 'assigned', 'done', 'cancel')</attribute>
+            </xpath>
+
+            <xpath expr="//header/button[@name='action_confirm']" position="attributes">
+                <attribute name="groups">base.group_user</attribute>
+            </xpath>
+
+            <xpath expr="//header/button[@name='action_assign']" position="attributes">
+                <attribute name="groups">base.group_user</attribute>
+            </xpath>
+
+            <xpath expr="//header/button[@name='action_cancel']" position="attributes">
+                <attribute name="groups">base.group_user</attribute>
+            </xpath>
+
+            <xpath expr="//button[@name='action_detailed_operations']" position="attributes">
+                <attribute name="groups">base.group_user</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='partner_id' and @nolabel='1']" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='picking_type_id']" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='location_id' and @options=&quot;{'no_create': True}&quot;]" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='location_dest_id'][last()]" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='scheduled_date'][last()]" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='date_deadline']" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='origin']" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user or state in ['cancel', 'done']</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="packed_by" invisible="1"/>
+                <field name="packed_by_user" readonly="state in ['waiting', 'done', 'cancel']"/>
+                <field name="sale_special_delivery_note"
+                       readonly="1"
+                       invisible="not sale_special_delivery_note"/>
+                <field name="delivered_by" readonly="1" invisible="1"/>
+            </xpath>
+
+            <xpath expr="//page[@name='operations']/field[@name='move_ids_without_package']" position="attributes">
+                <attribute name="readonly">is_packing_restricted_user or (state == 'done' and is_locked)</attribute>
+            </xpath>
+
+            <xpath expr="//page[@name='operations']/field[@name='move_ids_without_package']/tree" position="attributes">
+                <attribute name="editable">1</attribute>
+                <attribute name="create">true</attribute>
+                <attribute name="delete">true</attribute>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='note']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//notebook/page[@name='note']" position="after">
+                <page string="Notes">
+                    <field name="packed_notes" placeholder="Add packing notes..." readonly="state in ['done', 'cancel']"/>
+                </page>
+                <page string="Delivered Notes" invisible="1">
+                    <field name="delivered_notes" placeholder="Add delivered notes..." readonly="1"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_picking_tree_inherit_dw_bms_packing" model="ir.ui.view">
+        <field name="name">stock.picking.tree.inherit.dw.bms.packing</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="attributes">
+                <attribute name="default_order">create_date desc</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="create_date" string="Created On" widget="date"/>
+            </xpath>
+
+            <xpath expr="//tree" position="inside">
+                <field name="sale_id" column_invisible="True"/>
+                <field name="dispatch_mode_id" optional="show"/>
+                <button name="action_open_packing_order" 
+                        string="Packing" 
+                        type="object" 
+                        class="btn-info" 
+                        icon="fa-cubes" 
+                        title="Packing Details"
+                        invisible="not sale_id"/>
+                <button name="action_open_shipping"
+                        string="Shipping"
+                        type="object"
+                        class="btn-info"
+                        icon="fa-truck"
+                        title="Shipping Details"
+                        invisible="not sale_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_picking_tree_inherit_delivered_by" model="ir.ui.view">
+        <field name="name">stock.picking.tree.delivered.by</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+
+            <!-- Add Responsible (sale order creator) after Created On -->
+            <xpath expr="//field[@name='create_date']" position="after">
+                <field name="sale_responsible_id"
+                       string="User"
+                       optional="show"
+                       readonly="1"
+                       options="{'no_open': True}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

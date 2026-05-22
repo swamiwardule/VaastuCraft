@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Replacing Activities with Quotation Activity Tracking System -->
+    <!--
+    <menuitem
+        id="menu_home_daily_activities"
+        name="Activities"
+        parent="home.menu_home_root"
+        action="home.action_home_dashboard_activities_refresh"
+        groups="DW_BMS.group_bms_admin,base.group_system"
+        sequence="2"/>
+    -->
+    <menuitem id="menu_activity_dashboard"
+              name="Activity Tracking"
+              action="DW_BMS.action_activity_dashboard"
+              parent="home.menu_home_root"
+              sequence="2"/>
+
+    <menuitem
+        id="menu_home_reports_root"
+        name="Reports"
+        parent="home.menu_home_root"
+        groups="DW_BMS.group_bms_admin,DW_BMS.group_bms_report,base.group_system"
+        sequence="4"/>
+
+    <menuitem
+        id="menu_home_report_profit_loss"
+        name="Profit / Loss Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_profit_loss"
+        sequence="1"/>
+
+    <menuitem
+        id="menu_home_report_purchase_sales"
+        name="Purchase / Sales Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_purchase_sales"
+        sequence="2"/>
+
+    <menuitem
+        id="menu_home_report_supplier_customer"
+        name="Supplier and Customer Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_supplier_customer"
+        sequence="3"/>
+
+    <menuitem
+        id="menu_home_report_stock"
+        name="Stock Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_stock"
+        sequence="4"/>
+
+    <menuitem
+        id="menu_home_report_product_purchase"
+        name="Products Purchase Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_product_purchase"
+        sequence="5"/>
+
+    <menuitem
+        id="menu_home_report_product_sale_user"
+        name="Products Sale Report with Usernames"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_product_sale_user"
+        sequence="6"/>
+
+    <menuitem
+        id="menu_home_report_purchase_payment"
+        name="Purchase Payment / Pending Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_purchase_payment"
+        sequence="7"/>
+
+    <menuitem
+        id="menu_home_report_sales_payment"
+        name="Sales Payment Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_sales_payment"
+        sequence="8"/>
+
+    <menuitem
+        id="menu_home_report_bank"
+        name="Bank Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_bank"
+        sequence="9"/>
+
+    <menuitem
+        id="menu_home_report_manifest"
+        name="Manifest Report"
+        parent="menu_home_reports_root"
+        action="DW_BMS.action_bms_report_manifest"
+        sequence="10"/>
+
+    <menuitem
+        id="menu_home_product_stock_status"
+        name="Product Stock Status"
+        parent="home.menu_home_root"
+        action="DW_BMS.action_low_stock_products"
+        groups="DW_BMS.group_bms_admin,base.group_system"
+        sequence="5"/>
+</odoo>
