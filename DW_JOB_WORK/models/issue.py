@@ -227,6 +227,22 @@ class JobWorkIssue(models.Model):
                     raise ValidationError(
                         _("Issued quantity must be greater than zero for all raw materials.")
                     )
+
+                if line.product_free_qty <= 0:
+                    raise ValidationError(
+                        _("Product %s has no available stock.")
+                        % line.product_id.display_name
+                    )
+
+                if line.qty > line.product_free_qty:
+                    raise ValidationError(
+                        _("Issued quantity (%s) cannot exceed available quantity (%s) for product %s.")
+                        % (
+                            line.qty,
+                            line.product_free_qty,
+                            line.product_id.display_name,
+                        )
+                    )
                 move_vals_list.append(
                     {
                         "name": rec.name,
@@ -571,6 +587,36 @@ class JobWorkIssueLine(models.Model):
         readonly=True,
     )
 
+    @api.onchange('product_id')
+    def _onchange_product_validation(self):
+        for rec in self:
+            if rec.product_id and rec.product_free_qty <= 0:
+                product = rec.product_id
+                rec.product_id = False
+
+                return {
+                    'warning': {
+                        'title': _('Insufficient Stock'),
+                        'message': _(
+                            '%s has no free quantity available.'
+                        ) % product.display_name
+                    }
+                }
+
+    @api.constrains('qty', 'product_id')
+    def _check_free_qty(self):
+        for rec in self:
+            if rec.product_id and rec.qty > rec.product_free_qty:
+                raise ValidationError(
+                    _(
+                        "Issued Quantity (%s) cannot be greater than Free Quantity (%s) for product %s."
+                    ) % (
+                        rec.qty,
+                        rec.product_free_qty,
+                        rec.product_id.display_name
+                    )
+                )
+        
     @api.onchange('product_id', 'issue_id.contractor_id')
     def _onchange_product_id_set_taxes(self):
 

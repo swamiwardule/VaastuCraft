@@ -17,6 +17,10 @@
                         <field name="date_from"/>
                         <field name="date_to"/>
                         <field name="shipping_status"/>
+                        <field name="dispatch_mode_id"
+                            invisible="report_type != 'manifest'"/>
+                        <field name="courier_company_id"
+                            invisible="report_type != 'manifest'"/>
                     </group>
                 </group>
                 <group string="Excel File" invisible="not xlsx_file">

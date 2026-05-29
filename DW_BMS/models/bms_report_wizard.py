@@ -54,6 +54,15 @@ class BmsReportWizard(models.TransientModel):
 
     xlsx_file = fields.Binary(readonly=True)
     xlsx_filename = fields.Char(readonly=True)
+    dispatch_mode_id = fields.Many2one(
+        "packing.dispatch.mode",
+        string="Dispatch Mode"
+    )
+
+    courier_company_id = fields.Many2one(
+        "packing.courier.company",
+        string="Courier Company"
+    )
 
     def _selection_label(self, field_name, value):
         return dict(self._fields[field_name].selection).get(value)
@@ -116,6 +125,8 @@ class BmsReportWizard(models.TransientModel):
             "date_to": self._format_date_value(self.date_to),
             "user": self.user_id.display_name or "All",
             "shipping_status": self._selection_label("shipping_status", self.shipping_status),
+            "dispatch_mode": self.dispatch_mode_id.name or "All",
+            "courier_company": self.courier_company_id.name or "All",
         }
 
     def _collect_profit_loss(self):
@@ -435,6 +446,15 @@ class BmsReportWizard(models.TransientModel):
                     continue
 
             packing_order = self._get_manifest_packing_order(invoice, sale_order)
+            if self.dispatch_mode_id:
+                if not packing_order or \
+                packing_order.dispatch_mode_id != self.dispatch_mode_id:
+                    continue
+
+            if self.courier_company_id:
+                if not packing_order or \
+                packing_order.courier_company_id != self.courier_company_id:
+                    continue
             contact_number = (
                 invoice.shipping_mobile
                 or invoice.billing_mobile
