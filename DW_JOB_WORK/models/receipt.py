@@ -1,3 +1,5 @@
+from itertools import product
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -20,9 +22,9 @@ class JobWorkReceipt(models.Model):
     issue_id = fields.Many2one(
         "dw.job.work.issue",
         string="Issue Slip",
-        copy=False,
+        # copy=False,
         readonly=True,
-        ondelete="set null",
+        # ondelete="set null",
     )
     raw_material_product_id = fields.Many2one(
         "product.product",
@@ -58,13 +60,13 @@ class JobWorkReceipt(models.Model):
         compute="_compute_status_display",
     )
 
-    _sql_constraints = [
-        (
-            "unique_receipt_issue",
-            "unique(issue_id)",
-            "Only one receipt can be linked to an issue slip.",
-        )
-    ]
+    # _sql_constraints = [
+    #     (
+    #         "unique_receipt_issue",
+    #         "unique(issue_id)",
+    #         "Only one receipt can be linked to an issue slip.",
+    #     )
+    # ]
 
     company_id = fields.Many2one(
         "res.company",
@@ -114,7 +116,7 @@ class JobWorkReceipt(models.Model):
         compute="_compute_tax_breakup",
         store=True,
     )
-
+    
     @api.depends('line_ids.price_subtotal', 'line_ids.price_total')
     def _compute_totals(self):
 
@@ -259,9 +261,10 @@ class JobWorkReceipt(models.Model):
 
     def _consume_raw_material(self, contractor, product, qty_used):
         self.ensure_one()
+
         fifo_lines = self.env["dw.job.work.issue.line"].search(
             [
-                ("issue_id.contractor_id", "=", contractor.id),
+                ("issue_id", "=", self.issue_id.id),
                 ("issue_id.state", "=", "confirmed"),
                 ("product_id", "=", product.id),
                 ("remaining_qty", ">", 0),
@@ -356,6 +359,25 @@ class JobWorkReceipt(models.Model):
                 move.picked = True
             finished_moves._action_done()
             rec.state = "confirmed"
+            remaining_lines = rec.issue_id.line_ids.filtered(
+                lambda l: l.remaining_qty > 0
+            )
+
+            if remaining_lines:
+                self.env["dw.job.work.receipt"].create({
+                    "issue_id": rec.issue_id.id,
+                    "contractor_id": rec.contractor_id.id,
+                    "raw_line_ids": [
+                        (
+                            0,
+                            0,
+                            {
+                                "product_id": line.product_id.id,
+                            }
+                        )
+                        for line in remaining_lines
+                    ],
+                })
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -517,24 +539,26 @@ class JobWorkReceiptRawLine(models.Model):
     qty_used = fields.Float(string="Raw Material Used")
     state = fields.Selection(related="receipt_id.state", store=True, readonly=True)
 
-    @api.depends("receipt_id.contractor_id", "product_id")
+    @api.depends(
+        "receipt_id.issue_id",
+        "receipt_id.issue_id.line_ids.remaining_qty",
+        "product_id"
+    )
     def _compute_available_qty(self):
-        line_model = self.env["dw.job.work.issue.line"]
+
         for rec in self:
-            rec.available_qty = 0.0
-            if not rec.contractor_id or not rec.product_id:
-                continue
-            grouped = line_model.read_group(
-                [
-                    ("issue_id.contractor_id", "=", rec.contractor_id.id),
-                    ("issue_id.state", "=", "confirmed"),
-                    ("product_id", "=", rec.product_id.id),
-                    ("remaining_qty", ">", 0),
-                ],
-                ["remaining_qty:sum"],
-                [],
+
+            print("Issue ID =", rec.receipt_id.issue_id.id)
+            print("Product ID =", rec.product_id.id)
+
+            issue_lines = rec.receipt_id.issue_id.line_ids.filtered(
+                lambda l: l.product_id.id == rec.product_id.id
             )
-            rec.available_qty = grouped[0]["remaining_qty"] if grouped else 0.0
+
+            print("Issue Lines =", issue_lines)
+            print("Remaining =", issue_lines.mapped("remaining_qty"))
+
+            rec.available_qty = sum(issue_lines.mapped("remaining_qty"))
 
     @api.constrains("qty_used")
     def _check_positive_qty(self):
